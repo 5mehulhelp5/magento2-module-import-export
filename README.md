@@ -8,12 +8,12 @@ It is designed for developers, store managers, and system integrators who need m
 2. [Magento System Requirements](https://devdocs.magento.com/guides/v2.4/install-gde/system-requirements.html)
 
 # Supported Magento 2 versions
-| **Version**                                    | **Status** | **Notes** |
-|------------------------------------------------|------------|-----------|
-| **Magento Open Source/Magento Commerce 2.3.*** | x          |           |
-| **Magento Open Source 2.4.3**                  | x          |           |
-| **Magento Commerce 2.4.4+**                    | &check;    |           |
-| **Magento Open Source 2.4.4+**                 | &check;    |           |
+| **Version**                                  | **Status** | **Notes** |
+|----------------------------------------------|------------|-----------|
+| **Magento Open Source/Adobe Commerce 2.3.*** | x          |           |
+| **Magento Open Source 2.4.3**                | x          |           |
+| **Adobe Commerce 2.4.4+**                    | &check;    |           |
+| **Magento Open Source 2.4.4+**               | &check;    |           |
 
 # Documentation
 * [wiki](https://github.com/epuzzle/magento2-module-import-export/wiki)

@@ -88,4 +88,15 @@ class Import extends DefaultImport
             );
         }
     }
+
+    /**
+     * Sets the entity type
+     *
+     * @param string $value
+     * @return void
+     */
+    public function setEntity(string $value): void
+    {
+        $this->setData('entity', $value);
+    }
 }

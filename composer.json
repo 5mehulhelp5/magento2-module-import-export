@@ -9,7 +9,7 @@
         "epuzzle/magento2-module-file-uploader": "^1.0"
     },
     "license": [
-        "Proprietary"
+        "MIT"
     ],
     "autoload": {
         "files": [

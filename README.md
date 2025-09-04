@@ -1,5 +1,5 @@
 # Welcome
-This module extends the default Magento 2 Import / Export functionality, making it easier to manage bulk data transfers for products, customers, orders, and custom entities.
+This module extends the default Adobe Commerce Import / Export functionality, making it easier to manage bulk data transfers for products, customers, orders, and custom entities.
 
 It is designed for developers, store managers, and system integrators who need more flexibility when synchronizing Magento data with external systems (ERP, PIM, CRM, marketplaces, etc.).
 

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="EPuzzle\ImportExport\Api\CsvManagementInterface" type="EPuzzle\ImportExport\Model\CsvManagement"/>
+
+    <type name="EPuzzle\ImportExport\Console\Command\CsvImportCommand">
+        <arguments>
+            <argument name="fileDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+        </arguments>
+    </type>
+    <type name="Magento\Framework\Console\CommandListInterface">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="epuzzleCsvImport" xsi:type="object">EPuzzle\ImportExport\Console\Command\CsvImportCommand</item>
+            </argument>
+        </arguments>
+    </type>
+</config>

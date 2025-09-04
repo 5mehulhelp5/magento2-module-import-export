@@ -1,0 +1,22 @@
+{
+    "name": "epuzzle/magento2-module-import-export",
+    "version": "1.0.0",
+    "description": "This module provides functionality to extend import and export in Magento 2.",
+    "type": "magento2-module",
+    "require": {
+        "magento/framework": "*",
+        "epuzzle/magento2-module-base": "*",
+        "epuzzle/magento2-module-file-uploader": "*"
+    },
+    "license": [
+        "Proprietary"
+    ],
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "EPuzzle\\ImportExport\\": ""
+        }
+    }
+}

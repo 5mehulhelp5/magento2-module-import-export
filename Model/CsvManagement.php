@@ -7,15 +7,12 @@ namespace EPuzzle\ImportExport\Model;
 use EPuzzle\FileUploader\Api\FileRepositoryInterface;
 use EPuzzle\FileUploader\Api\FileUploaderManagementInterface;
 use EPuzzle\ImportExport\Api\CsvManagementInterface;
-use Exception;
-use Magento\Framework\App\Filesystem\DirectoryList;
+use EPuzzle\ImportExport\Api\Data\ImportInterface;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Exception\InvalidArgumentException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NotFoundException;
-use Magento\Framework\Exception\RuntimeException;
-use Symfony\Component\Process\Process;
 
 /**
  * Provides functionality to import/export data using CSV files
@@ -25,102 +22,72 @@ class CsvManagement implements CsvManagementInterface
     /**
      * CsvManagement
      *
-     * @param FileUploaderManagementInterface $fileUploaderManagement
+     * @param CsvManagement\Import $import
+     * @param CsvManagement\ToBatches $toBatches
+     * @param ConfigProvider $configProvider
      * @param FileRepositoryInterface $fileRepository
-     * @param DirectoryList $directoryList
+     * @param FileUploaderManagementInterface $fileUploaderManagement
      */
     public function __construct(
-        private readonly FileUploaderManagementInterface $fileUploaderManagement,
+        private CsvManagement\Import $import,
+        private CsvManagement\ToBatches $toBatches,
+        private readonly ConfigProvider $configProvider,
         private readonly FileRepositoryInterface $fileRepository,
-        private readonly DirectoryList $directoryList
+        private readonly FileUploaderManagementInterface $fileUploaderManagement
     ) {
     }
 
     /**
      * @inheritDoc
      */
-    public function import(
-        ?int $fileId = null,
-        string $outputFormat = 'json',
-        string $entityType = 'catalog_product',
-        string $behavior = Import::BEHAVIOR_APPEND,
-        ?string $catalogImagesPath = null
-    ): string {
-        if (!$fileId) {
-            try {
-                $fileId = $this->uploadCsvFile();
-            } catch (Exception $exception) {
-                throw new CouldNotSaveException(
-                    __('Could not upload the CSV file: %error.', ['error' => $exception->getMessage()]),
-                    $exception
-                );
-            }
-        }
-        try {
-            $file = $this->fileRepository->get($fileId);
-            $args = [
-                $this->findPhpBinary(),
-                '-d', 'max_execution_time=0',
-                '-d', 'memory_limit=-1',
-                '-d', 'xdebug.mode=off',
-                '-d', 'zlib.output_compression=0',
-                '-d', 'output_buffering=0',
-                '-d', 'zlib.output_handler=',
-                $this->directoryList->getRoot() . '/bin/magento',
-                'epuzzle:import-export:csv-import',
-                '-i', (string)$file->getEntityId(),
-                '-e', $entityType,
-                '-b', $behavior,
-                '-f', $outputFormat
-            ];
-            if ($catalogImagesPath) {
-                $args[] = '--catalog-images-path';
-                $args[] = $catalogImagesPath;
-            }
-            $process = new Process($args);
-            $process->run();
+    public function import(ImportInterface $import, ?string $fileId = null): array
+    {
+        $files = $this->toBatches($fileId);
 
-            return $process->getOutput();
-        } catch (Exception $exception) {
-            throw new LocalizedException(__('Could not import this CSV file.'), $exception);
-        }
+        return $this->import->execute($import, $files);
     }
 
     /**
-     * Try to upload the image
+     * @inheritDoc
+     */
+    public function toBatches(?string $fileId = null, ?int $maxSize = null): array
+    {
+        $maxSize = $maxSize ?: $this->configProvider->csvMaxSize();
+
+        return $this->toBatches->execute($this->resolveFileId($fileId), $maxSize);
+    }
+
+    /**
+     * Resolve the file ID to import
      *
+     * @param string|null $fileId
      * @return int
-     * @throws InvalidArgumentException
+     * @throws CouldNotSaveException
      * @throws FileSystemException
-     * @throws LocalizedException
+     * @throws InvalidArgumentException
      * @throws NotFoundException
+     * @throws LocalizedException
      */
-    private function uploadCsvFile(): int
+    private function resolveFileId(?string $fileId = null): int
     {
-        $fileUploaderSettings = $this->fileUploaderManagement->createFileUploaderSettings();
-        $fileUploaderSettings->getExtensionAttributes()->setUploaderAllowedExtensions(['csv']);
-        $files = $this->fileUploaderManagement->upload($fileUploaderSettings);
-        if (!isset($files[0])) {
-            throw new InvalidArgumentException(__('The uploaded image is invalid or empty.'));
+        if (is_numeric($fileId)) {
+            $file = $this->fileRepository->get((int)$fileId);
+        } else {
+            $fileUploaderSettings = $this->fileUploaderManagement->createFileUploaderSettings();
+            $fileUploaderSettings->getExtensionAttributes()->setUploaderAllowedExtensions(['csv']);
+            if (!empty($fileId)) {
+                $fileUploaderSettings->getExtensionAttributes()->setSystemFilePath($fileId);
+            }
+            $files = $this->fileUploaderManagement->upload($fileUploaderSettings);
+            if (!isset($files[0])) {
+                throw new InvalidArgumentException(__('Could not upload the provided file.'));
+            }
+            $file = $files[0];
+        }
+        if ($file->getType() !== ConfigProvider::CSV_MIME_TYPE) {
+            throw new InvalidArgumentException(__('Provided file is not a CSV file.'));
         }
 
-        return $files[0]->getEntityId();
-    }
-
-    /**
-     * Find the PHP binary file
-     *
-     * @return string
-     * @throws RuntimeException
-     */
-    private function findPhpBinary(): string
-    {
-        $process = new Process(['which', 'php']);
-        $process->run();
-        if (!$process->isSuccessful()) {
-            throw new RuntimeException(__('Unable to locate PHP binary.'));
-        }
-
-        return trim($process->getOutput());
+        return $file->getEntityId();
     }
 }

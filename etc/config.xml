@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <epuzzle_import_export>
+            <csv>
+                <max_size>20000</max_size><!-- 20 Kilobyte -->
+            </csv>
+            <security>
+                <key>WX6dYHTBPpjLWZTeZgNTmtF7yKbkOFX9</key>
+            </security>
+        </epuzzle_import_export>
+    </default>
+</config>

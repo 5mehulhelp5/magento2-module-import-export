@@ -1,16 +1,27 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="EPuzzle\ImportExport\Api\Data\ImportInterface" type="EPuzzle\ImportExport\Model\Import"/>
+    <preference for="EPuzzle\ImportExport\Api\Data\ImportResultInterface" type="EPuzzle\ImportExport\Model\ImportResult"/>
     <preference for="EPuzzle\ImportExport\Api\CsvManagementInterface" type="EPuzzle\ImportExport\Model\CsvManagement"/>
 
-    <type name="EPuzzle\ImportExport\Console\Command\CsvImportCommand">
+    <type name="EPuzzle\ImportExport\Model\CsvManagement\ToBatches">
         <arguments>
             <argument name="fileDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
         </arguments>
     </type>
+
+    <type name="EPuzzle\ImportExport\Model\CsvManagement">
+        <arguments>
+            <argument name="import" xsi:type="object">EPuzzle\ImportExport\Model\CsvManagement\Import\Proxy</argument>
+            <argument name="toBatches" xsi:type="object">EPuzzle\ImportExport\Model\CsvManagement\ToBatches\Proxy</argument>
+        </arguments>
+    </type>
+
     <type name="Magento\Framework\Console\CommandListInterface">
         <arguments>
             <argument name="commands" xsi:type="array">
                 <item name="epuzzleCsvImport" xsi:type="object">EPuzzle\ImportExport\Console\Command\CsvImportCommand</item>
+                <item name="epuzzleCsvToBatches" xsi:type="object">EPuzzle\ImportExport\Console\Command\CsvToBatchesCommand</item>
             </argument>
         </arguments>
     </type>

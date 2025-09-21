@@ -5,7 +5,7 @@
             <resource id="Magento_Backend::admin">
                 <resource id="EPuzzle_Base::base">
                     <resource id="EPuzzle_ImportExport::base" title="Import/Export" translate="title" sortOrder="50">
-                        <resource id="EPuzzle_ImportExport::csv" title="CSV import" translate="title" sortOrder="10"/>
+                        <resource id="EPuzzle_ImportExport::csv_import" title="CSV import" translate="title" sortOrder="10"/>
                     </resource>
                 </resource>
             </resource>

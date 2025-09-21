@@ -4,17 +4,15 @@ declare(strict_types=1);
 
 namespace EPuzzle\ImportExport\Model;
 
-use EPuzzle\FileUploader\Api\Data\FileInterface;
-use Magento\Framework\Exception\FileSystemException;
+use EPuzzle\ImportExport\Api\Data\ImportInterface;
 use Magento\Framework\Exception\InvalidArgumentException;
-use Magento\Framework\Exception\LocalizedException;
 use Magento\ImportExport\Model\Import as DefaultImport;
 use Magento\ImportExport\Model\Import\ErrorProcessing\ProcessingErrorAggregatorInterface;
 
 /**
  * Used to import data
  */
-class Import extends DefaultImport
+class Import extends DefaultImport implements ImportInterface
 {
     /**
      * @var string[]
@@ -27,14 +25,9 @@ class Import extends DefaultImport
     ];
 
     /**
-     * Validate and import CSV file
-     *
-     * @param FileInterface $csvFile
-     * @return bool
-     * @throws LocalizedException
-     * @throws FileSystemException
+     * @inheritDoc
      */
-    public function validateAndImportCsv(FileInterface $csvFile): bool
+    public function validateAndImportCsv(string $filePath): bool
     {
         $defaultData = [
             'entity' => 'catalog_product',
@@ -49,34 +42,43 @@ class Import extends DefaultImport
                 $this->setData($key, $defaultValue);
             }
         }
-        $source = $this->_getSourceAdapter($csvFile->getFullPath());
+        $source = $this->_getSourceAdapter($filePath);
         $this->validateSource($source);
-        $this->createHistoryReport($csvFile->getFullPath(), $this->getEntity());
-        $result = $this->importSource();
-        if ($result) {
+        $this->createHistoryReport($filePath, $this->getEntity());
+        $isSuccess = !$this->getErrorAggregator()->hasFatalExceptions() && $this->importSource();
+        if ($isSuccess) {
             $this->invalidateIndex();
         }
 
-        return $result;
+        return $isSuccess;
     }
 
     /**
-     * Sets the path to the catalog images
-     *
-     * @param string $value
-     * @return void
+     * @inheritDoc
      */
-    public function setCatalogImagesPath(string $value): void
+    public function getEntity(): string
     {
-        $this->setData(self::FIELD_NAME_IMG_FILE_DIR, $value);
+        return (string)$this->getData('entity');
     }
 
     /**
-     * Sets the import behavior
-     *
-     * @param string $value
-     * @return void
-     * @throws InvalidArgumentException
+     * @inheritDoc
+     */
+    public function setEntity(string $value): void
+    {
+        $this->setData('entity', $value);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getBehavior(): string
+    {
+        return (string)$this->getData('behavior');
+    }
+
+    /**
+     * @inheritDoc
      */
     public function setBehavior(string $value): void
     {
@@ -90,13 +92,18 @@ class Import extends DefaultImport
     }
 
     /**
-     * Sets the entity type
-     *
-     * @param string $value
-     * @return void
+     * @inheritDoc
      */
-    public function setEntity(string $value): void
+    public function getCatalogImagesPath(): ?string
     {
-        $this->setData('entity', $value);
+        return $this->getData(self::FIELD_NAME_IMG_FILE_DIR);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setCatalogImagesPath(?string $value): void
+    {
+        $this->setData(self::FIELD_NAME_IMG_FILE_DIR, $value);
     }
 }

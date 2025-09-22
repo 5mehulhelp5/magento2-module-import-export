@@ -9,6 +9,7 @@
 * New features:
     * Batching CSV files. Available in CLI command and REST API
     * Batching large CSV files before import process automatically
+    * Added unit tests
 
 1.0.0
 =============

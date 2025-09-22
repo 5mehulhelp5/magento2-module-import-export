@@ -169,6 +169,11 @@ class DownloadReportTest extends TestCase
         $this->sut->execute();
     }
 
+    /**
+     * Gets data for the not found cases
+     *
+     * @return array[]
+     */
     public function dataProviderForNotFoundCases(): array
     {
         return [

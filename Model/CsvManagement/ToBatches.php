@@ -50,9 +50,6 @@ class ToBatches
             return [$file];
         }
         $resourceToRead = $this->fileDriver->fileOpen($file->getFullPath(), 'r');
-        if (!$resourceToRead) {
-            throw new FileSystemException(__('Cannot open file: %1', $file->getFullPath()));
-        }
         $header = $this->fileDriver->fileGetCsv($resourceToRead);
         if (!$header) {
             throw new FileSystemException(__('CSV file is empty'));

@@ -50,9 +50,11 @@ class Import
      */
     public function execute(ImportInterface $import, array $files): array
     {
+        /** @var \EPuzzle\ImportExport\Model\Import $import */
         $importResults = [];
         foreach ($files as $file) {
             // import data from the CSV file
+            /** @var \EPuzzle\ImportExport\Model\Import $fileImport */
             $fileImport = $this->copyImport($import);
             $isSuccess = $fileImport->validateAndImportCsv($file->getFullPath())
                 && !$import->getErrorAggregator()->hasToBeTerminated();
@@ -93,7 +95,6 @@ class Import
         $copiedImport = $this->importFactory->create();
         $copiedImport->setEntity($import->getEntity());
         $copiedImport->setBehavior($import->getBehavior());
-        $copiedImport->setOutputFormat($import->getOutputFormat());
         if ($cImagesPath = $import->getCatalogImagesPath()) {
             $copiedImport->setCatalogImagesPath($cImagesPath);
         }

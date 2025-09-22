@@ -48,4 +48,4 @@ Use our ready-to-run Postman collection to explore and test the Import API endpo
 
 Copyright (c) 2025 ePuzzle contributors.
 This module is [MIT licensed](./LICENSE).
-Project coordinator: <support@epuzzle.org>
+Project coordinator: [support@epuzzle.org](mailto:support@epuzzle.org)

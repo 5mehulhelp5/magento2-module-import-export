@@ -69,7 +69,9 @@ class ToBatchesTest extends TestCase
         $file = $this->createMock(FileInterface::class);
         $file->method('getSize')->willReturn(1000);
         $file->method('getFullPath')->willReturn('/var/import/file.csv');
-        $this->fileRepository->method('get')->with($fileId)->willReturn($file);
+        $this->fileRepository->method('get')
+            ->with($fileId)
+            ->willReturn($file);
         $this->driver->expects($this->once())
             ->method('fileOpen')
             ->with('/var/import/file.csv', 'r')
@@ -113,11 +115,22 @@ class ToBatchesTest extends TestCase
         $srcFile = $this->createMock(FileInterface::class);
         $srcFile->method('getSize')->willReturn(10_000);
         $srcFile->method('getFullPath')->willReturn($srcPath);
-        $this->fileRepository->method('get')->with($fileId)->willReturn($srcFile);
+        $this->fileRepository->method('get')
+            ->with($fileId)
+            ->willReturn($srcFile);
         $this->ioFile->method('getPathInfo')->willReturnMap([
-            [$srcPath, ['filename' => 'file', 'basename' => 'file.csv', 'dirname' => '/var/import']],
-            [$batch1Path, ['basename' => 'file_0001.csv', 'dirname' => '/var/import']],
-            [$batch2Path, ['basename' => 'file_0002.csv', 'dirname' => '/var/import']],
+            [
+                $srcPath,
+                ['filename' => 'file', 'basename' => 'file.csv', 'dirname' => '/var/import']
+            ],
+            [
+                $batch1Path,
+                ['basename' => 'file_0001.csv', 'dirname' => '/var/import']
+            ],
+            [
+                $batch2Path,
+                ['basename' => 'file_0002.csv', 'dirname' => '/var/import']
+            ],
         ]);
         $read = fopen('php://temp', 'w+');
         $write1 = fopen('php://temp', 'w+');
@@ -153,28 +166,41 @@ class ToBatchesTest extends TestCase
         $readCounter = 0;
         $this->driver->expects($this->exactly(1 + $totalRows + 1))
             ->method('fileGetCsv')
-            ->willReturnCallback(function ($res) use (&$readCounter) {
-                if ($readCounter === 0) {
-                    $readCounter++;
+            ->willReturnCallback(
+                function ($res) use (&$readCounter) {
+                    if ($readCounter === 0) {
+                        $readCounter++;
 
-                    return ['col1', 'col2'];
+                        return ['col1', 'col2'];
+                    }
+                    if ($readCounter <= 150) {
+                        $readCounter++;
+
+                        return ['v1', 'v2'];
+                    }
+
+                    return false;
                 }
-                if ($readCounter <= 150) {
-                    $readCounter++;
-
-                    return ['v1', 'v2'];
-                }
-
-                return false;
-            });
-        $this->driver->expects($this->any())->method('filePutCsv')->willReturn(null);
+            );
+        $this->driver->expects($this->any())
+            ->method('filePutCsv')
+            ->willReturn(null);
         $this->driver->expects($this->once())
             ->method('fileTell')
             ->with($write1)
             ->willReturn($maxSize + 1);
+        $closeIndex = 0;
+        $closeOrder = [$write1, $write2, $read];
         $this->driver->expects($this->exactly(3))
             ->method('fileClose')
-            ->withConsecutive([$write1], [$write2], [$read]);
+            ->willReturnCallback(
+                function ($handle) use (&$closeIndex, $closeOrder) {
+                    TestCase::assertSame($closeOrder[$closeIndex], $handle);
+                    $closeIndex++;
+
+                    return null;
+                }
+            );
         $batchEntity1 = $this->createMock(FileInterface::class);
         $batchEntity2 = $this->createMock(FileInterface::class);
         $this->fileRepository->expects($this->exactly(2))
@@ -204,9 +230,18 @@ class ToBatchesTest extends TestCase
             ->method('setPath')
             ->with('/var/import/')
             ->willReturnSelf();
+        $saveIndex = 0;
+        $expectedSaves = [$batchEntity1, $batchEntity2];
         $this->fileRepository->expects($this->exactly(2))
             ->method('save')
-            ->withConsecutive([$batchEntity1], [$batchEntity2]);
+            ->willReturnCallback(
+                function ($entity) use (&$saveIndex, $expectedSaves) {
+                    TestCase::assertSame($expectedSaves[$saveIndex], $entity);
+                    $saveIndex++;
+
+                    return $saveIndex;
+                }
+            );
         $result = null;
         try {
             $result = $this->sut->execute($fileId, $maxSize);
@@ -231,8 +266,14 @@ class ToBatchesTest extends TestCase
         $srcFile->method('getFullPath')->willReturn($srcPath);
         $this->fileRepository->method('get')->willReturn($srcFile);
         $this->ioFile->method('getPathInfo')->willReturnMap([
-            [$srcPath, ['filename' => 'file', 'basename' => 'file.csv', 'dirname' => '/var/import']],
-            [$batch1Path, ['basename' => 'file_0001.csv', 'dirname' => '/var/import']],
+            [
+                $srcPath,
+                ['filename' => 'file', 'basename' => 'file.csv', 'dirname' => '/var/import']
+            ],
+            [
+                $batch1Path,
+                ['basename' => 'file_0001.csv', 'dirname' => '/var/import']
+            ],
         ]);
         $read = fopen('php://temp', 'w+');
         $write1 = fopen('php://temp', 'w+');
@@ -250,25 +291,29 @@ class ToBatchesTest extends TestCase
         );
         $totalRows = 100;
         $readCounter = 0;
-        $this->driver->method('fileGetCsv')->willReturnCallback(function ($res) use (&$readCounter) {
-            if ($readCounter === 0) {
-                $readCounter++;
+        $this->driver->method('fileGetCsv')->willReturnCallback(
+            function ($res) use (&$readCounter) {
+                if ($readCounter === 0) {
+                    $readCounter++;
 
-                return ['col1'];
+                    return ['col1'];
+                }
+                if ($readCounter <= 100) {
+                    $readCounter++;
+
+                    return ['v1'];
+                }
+
+                return false;
             }
-            if ($readCounter <= 100) {
-                $readCounter++;
-
-                return ['v1'];
-            }
-
-            return false;
-        });
+        );
         $this->driver->method('filePutCsv')->willReturn(null);
         $this->driver->method('fileTell')->willReturn($maxSize + 1);
         $entity = $this->createMock(FileInterface::class);
         $this->fileRepository->method('create')->willReturn($entity);
-        $this->fileRepository->method('save')
+        $this->fileRepository->expects($this->once())
+            ->method('save')
+            ->with($entity)
             ->willThrowException(new CouldNotSaveException(__('save error')));
         $this->expectException(CouldNotSaveException::class);
         try {

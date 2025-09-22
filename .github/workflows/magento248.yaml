@@ -50,8 +50,8 @@ jobs:
         env:
           MAGENTO2_USERNAME: ${{ secrets.MAGENTO2_USERNAME }}
           MAGENTO2_PASSWORD: ${{ secrets.MAGENTO2_PASSWORD }}
-      - name: Installation Module Dependencies
-        run: php /tmp/composer.phar require epuzzle/magento2-module-file-uploader
+      - name: Installation the EPuzzle_ImportExport module Dependencies
+        run: php /tmp/composer.phar require epuzzle/magento2-module-file-uploader -d /tmp/magento2
       - name: Copy EPuzzle_ImportExport module
         run: mkdir -p /tmp/magento2/app/code/EPuzzle/ImportExport && cp -r ./ /tmp/magento2/app/code/EPuzzle/ImportExport
       - name: Configure Production Mode
